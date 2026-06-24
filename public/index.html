@@ -18,7 +18,6 @@
       overflow: hidden;
     }
 
-    /* ── Header ── */
     header {
       background: #1c2b4a;
       color: #fff;
@@ -37,7 +36,6 @@
       padding: 3px 10px;
     }
 
-    /* ── Layout ── */
     .main { display: flex; flex: 1; overflow: hidden; }
 
     /* ── Sidebar ── */
@@ -76,10 +74,7 @@
       transition: border-color 0.15s, background 0.15s;
       user-select: none;
     }
-    .drop-zone:hover, .drop-zone.drag-over {
-      border-color: #3b7dd8;
-      background: #f0f6ff;
-    }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: #3b7dd8; background: #f0f6ff; }
     .drop-zone .dz-icon { font-size: 26px; margin-bottom: 5px; }
     .drop-zone .dz-title { font-size: 13px; font-weight: 600; color: #333; }
     .drop-zone .dz-sub { font-size: 11px; color: #aaa; margin-top: 3px; line-height: 1.5; }
@@ -125,173 +120,121 @@
     }
     .hint-box strong { display: block; margin-bottom: 3px; }
 
-    /* ── History panel ── */
+    /* History panel */
     .history-list {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      max-height: 220px;
-      overflow-y: auto;
+      display: flex; flex-direction: column; gap: 5px;
+      max-height: 220px; overflow-y: auto;
     }
     .history-item {
-      background: #f8f8f7;
-      border: 1px solid #eaeaea;
-      border-radius: 7px;
-      padding: 8px 10px;
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
+      background: #f8f8f7; border: 1px solid #eaeaea;
+      border-radius: 7px; padding: 8px 10px;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
     }
     .history-item:hover { border-color: #3b7dd8; background: #f0f6ff; }
-    .history-item .hi-date {
-      font-size: 10px;
-      color: #bbb;
-      margin-bottom: 3px;
-    }
+    .history-item .hi-date { font-size: 10px; color: #bbb; margin-bottom: 3px; }
     .history-item .hi-preview {
-      font-size: 12px;
-      color: #444;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 12px; color: #444;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .history-empty { font-size: 12px; color: #bbb; text-align: center; padding: 6px 0; }
 
-    /* ── History modal ── */
+    /* History modal */
     #historyModal {
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: fixed; inset: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: center;
       background: rgba(0,0,0,0.45);
     }
     #historyModal.hidden { display: none; }
     .hm-card {
-      background: #fff;
-      border-radius: 12px;
-      width: 640px;
-      max-width: 90vw;
-      max-height: 80vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      overflow: hidden;
+      background: #fff; border-radius: 12px;
+      width: 640px; max-width: 90vw; max-height: 80vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;
     }
     .hm-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid #eee;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid #eee;
+      display: flex; align-items: center; justify-content: space-between;
       flex-shrink: 0;
     }
     .hm-header h3 { font-size: 15px; font-weight: 700; color: #1c2b4a; }
     .hm-header .hm-date { font-size: 11px; color: #aaa; }
     .hm-close {
       background: none; border: none; cursor: pointer;
-      color: #aaa; font-size: 20px; line-height: 1; padding: 2px 6px;
-      border-radius: 4px;
+      color: #aaa; font-size: 20px; line-height: 1; padding: 2px 6px; border-radius: 4px;
     }
     .hm-close:hover { background: #f0f0f0; color: #555; }
     .hm-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+      flex: 1; overflow-y: auto; padding: 16px 20px;
+      display: flex; flex-direction: column; gap: 14px;
     }
+    /* Files section inside modal */
+    .hm-files {
+      display: flex; flex-direction: column; gap: 6px;
+      padding-bottom: 12px; border-bottom: 1px solid #eee;
+    }
+    .hm-files-label {
+      font-size: 10px; font-weight: 700; color: #bbb;
+      text-transform: uppercase; letter-spacing: 0.6px;
+    }
+    .hm-file-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: #444;
+    }
+    .hm-file-row .hm-file-id {
+      font-size: 10px; font-family: 'SF Mono','Fira Code',monospace;
+      color: #bbb; margin-left: auto; white-space: nowrap;
+    }
+    .hm-file-copy {
+      background: none; border: none; cursor: pointer;
+      color: #ccc; font-size: 12px; padding: 2px 4px; border-radius: 3px;
+    }
+    .hm-file-copy:hover { background: #ececec; color: #555; }
+    /* Messages */
     .hm-msg {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      max-width: 88%;
+      display: flex; flex-direction: column; gap: 4px; max-width: 88%;
     }
     .hm-msg.user { align-self: flex-end; align-items: flex-end; }
     .hm-msg.assistant { align-self: flex-start; }
     .hm-msg .hm-role {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #aaa;
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px; color: #aaa;
     }
     .hm-msg.user .hm-role { color: #3b7dd8; }
     .hm-bubble {
-      padding: 9px 13px;
-      border-radius: 10px;
-      font-size: 13px;
-      line-height: 1.55;
-      white-space: pre-wrap;
-      word-break: break-word;
+      padding: 9px 13px; border-radius: 10px;
+      font-size: 13px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
     }
-    .hm-msg.user .hm-bubble {
-      background: #1c2b4a;
-      color: #fff;
-      border-bottom-right-radius: 3px;
-    }
-    .hm-msg.assistant .hm-bubble {
-      background: #f0f0ee;
-      color: #222;
-      border-bottom-left-radius: 3px;
-    }
+    .hm-msg.user .hm-bubble { background: #1c2b4a; color: #fff; border-bottom-right-radius: 3px; }
+    .hm-msg.assistant .hm-bubble { background: #f0f0ee; color: #222; border-bottom-left-radius: 3px; }
 
-    /* CSV download section */
+    /* CSV section */
     .csv-section {
-      border-top: 1px solid #efefef;
-      padding-top: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      border-top: 1px solid #efefef; padding-top: 14px;
+      display: flex; flex-direction: column; gap: 8px;
     }
-    .csv-stats {
-      font-size: 11px;
-      color: #aaa;
-      text-align: center;
-    }
-    .csv-stats strong { color: #555; }
+    .csv-stats { font-size: 11px; color: #aaa; text-align: center; }
     .btn-csv {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      background: #1c2b4a;
-      color: #fff;
-      border: none;
-      border-radius: 7px;
-      padding: 9px 12px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s;
-      text-decoration: none;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: #1c2b4a; color: #fff; border: none; border-radius: 7px;
+      padding: 9px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background 0.15s; text-decoration: none;
     }
     .btn-csv:hover { background: #2a3f6a; }
-    .conv-indicator {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: #888;
-    }
+    .conv-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #888; }
     .conv-dot {
-      width: 7px; height: 7px;
-      background: #e0e0e0;
-      border-radius: 50%;
-      flex-shrink: 0;
-      transition: background 0.3s;
+      width: 7px; height: 7px; background: #e0e0e0;
+      border-radius: 50%; flex-shrink: 0; transition: background 0.3s;
     }
     .conv-dot.active { background: #2a9e6a; }
 
-    /* ── Chat area ── */
+    /* Chat area */
     .chat-area {
       flex: 1; display: flex; flex-direction: column;
       overflow: hidden; position: relative;
     }
     openai-chatkit { width: 100%; height: 100%; display: block; }
 
-    /* Loading overlay */
     #chatOverlay {
       position: absolute; inset: 0;
       display: flex; flex-direction: column;
@@ -321,7 +264,7 @@
 </head>
 <body>
 
-<!-- ── History modal ── -->
+<!-- History modal -->
 <div id="historyModal" class="hidden">
   <div class="hm-card">
     <div class="hm-header">
@@ -335,24 +278,21 @@
   </div>
 </div>
 
-<!-- ── Main UI ── -->
+<!-- Main UI -->
 <header>
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff"
        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M12 20h9"/>
-    <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
   </svg>
   <h1>Paper Grader Assistant</h1>
   <span class="badge">Agent Builder</span>
 </header>
 
 <div class="main">
-
   <aside class="sidebar">
     <div class="sidebar-inner">
 
       <span class="section-label">Upload Papers</span>
-
       <div class="drop-zone" id="dropZone" role="button" tabindex="0">
         <div class="dz-icon">📄</div>
         <div class="dz-title">Drop files here</div>
@@ -360,19 +300,19 @@
         <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt" multiple />
       </div>
 
-      <span class="section-label">Saved Files</span>
+      <span class="section-label">This Chat's Files</span>
       <div class="file-list" id="fileList">
         <p class="file-empty">No files uploaded yet</p>
       </div>
 
       <div class="hint-box">
         <strong>💡 Tip</strong>
-        Upload a paper — it's saved to Supabase and gets an OpenAI file ID.
-        Paste the file ID into the chat when messaging the agent.
+        Upload a paper — it gets saved and sent to OpenAI.
+        Copy the file ID and paste it into the chat for the agent to reference it.
       </div>
 
       <div class="csv-section">
-        <span class="section-label">Past Conversations</span>
+        <span class="section-label">Past Chats</span>
         <div class="history-list" id="historyList">
           <div class="history-empty">No conversations yet</div>
         </div>
@@ -385,7 +325,7 @@
           <span id="convLabel">No messages logged yet</span>
         </div>
         <p class="csv-stats" id="csvStats"></p>
-        <a class="btn-csv" id="btnCsv" href="/api/conversations/export" download="conversations.csv">
+        <a class="btn-csv" href="/api/conversations/export" download="conversations.csv">
           ⬇ Download CSV
         </a>
       </div>
@@ -399,28 +339,19 @@
       <span class="ov-text">Connecting to agent…</span>
     </div>
   </div>
-
 </div>
 
 <script>
 // ══════════════════════════════════════════════════════════════════
-// CONVERSATION LOGGER
-// Intercepts fetch() calls made by openai-chatkit to OpenAI's API,
-// tees streaming SSE responses, and POSTs each exchange to
-// /api/log/messages so the backend saves it to Supabase.
+// Stable user ID so ChatKit thread history persists across sessions.
 // ══════════════════════════════════════════════════════════════════
-
-// Stable user ID persisted in localStorage so ChatKit thread history
-// works across browser sessions.
 function getUserId() {
   let id = localStorage.getItem('pg_user_id');
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem('pg_user_id', id);
-  }
+  if (!id) { id = crypto.randomUUID(); localStorage.setItem('pg_user_id', id); }
   return id;
 }
 
+// One conversation ID per chat thread — resets when a new thread starts.
 let _convId    = crypto.randomUUID();
 let _totalRows = 0;
 
@@ -438,23 +369,30 @@ function _updateConvUI() {
   }
 }
 
-// ── History panel ──────────────────────────────────────────────────
-function _fmtDate(iso) {
+// ── Utilities ──────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fileIcon(name) {
+  if (/\.pdf$/i.test(name))      return '📕';
+  if (/\.(docx?|doc)$/i.test(name)) return '📘';
+  return '📄';
+}
+function fmtSize(b) {
+  if (b < 1024)    return `${b} B`;
+  if (b < 1048576) return `${(b/1024).toFixed(1)} KB`;
+  return `${(b/1048576).toFixed(1)} MB`;
+}
+function fmtDate(iso) {
   if (!iso) return '';
   try {
-    const d = new Date(iso);
-    return d.toLocaleString(undefined, {
-      month: 'short', day: 'numeric',
-      hour: '2-digit', minute: '2-digit',
+    return new Date(iso).toLocaleString(undefined, {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
     });
-  } catch { return iso.slice(0, 16).replace('T', ' '); }
+  } catch { return iso.slice(0,16).replace('T',' '); }
 }
 
-function _previewText(conv) {
-  const first = conv.messages.find(m => m.role === 'user');
-  return first ? first.content.slice(0, 60) : '(empty)';
-}
-
+// ── History panel ──────────────────────────────────────────────────
 async function loadHistory() {
   const list = document.getElementById('historyList');
   if (!list) return;
@@ -462,31 +400,68 @@ async function loadHistory() {
     const convs = await fetch('/api/conversations').then(r => r.json());
     list.innerHTML = '';
     if (!convs.length) {
-      list.innerHTML = '<div class="history-empty">No past conversations yet.</div>';
+      list.innerHTML = '<div class="history-empty">No past chats yet.</div>';
       return;
     }
     convs.forEach(conv => {
+      const first = conv.messages.find(m => m.role === 'user');
+      const preview = first ? first.content.slice(0, 60) : '(empty)';
       const item = document.createElement('div');
       item.className = 'history-item';
       item.innerHTML = `
-        <div class="hi-date">${esc(_fmtDate(conv.started_at))}</div>
-        <div class="hi-preview">${esc(_previewText(conv))}</div>`;
+        <div class="hi-date">${esc(fmtDate(conv.started_at))}</div>
+        <div class="hi-preview">${esc(preview)}</div>`;
       item.addEventListener('click', () => openHistoryModal(conv));
       list.appendChild(item);
     });
   } catch { /* non-critical */ }
 }
 
-function openHistoryModal(conv) {
+async function openHistoryModal(conv) {
   const modal = document.getElementById('historyModal');
   const title = document.getElementById('hmTitle');
   const date  = document.getElementById('hmDate');
   const body  = document.getElementById('hmBody');
 
   title.textContent = `${conv.messages.length} message${conv.messages.length !== 1 ? 's' : ''}`;
-  date.textContent  = _fmtDate(conv.started_at);
+  date.textContent  = fmtDate(conv.started_at);
+  body.innerHTML    = '<span style="font-size:12px;color:#bbb">Loading…</span>';
+  modal.classList.remove('hidden');
+
+  // Fetch files for this conversation
+  let files = [];
+  try {
+    files = await fetch(`/api/uploads?conversation_id=${encodeURIComponent(conv.id)}`).then(r => r.json());
+  } catch { /* non-critical */ }
 
   body.innerHTML = '';
+
+  // Files section (if any)
+  if (files.length) {
+    const section = document.createElement('div');
+    section.className = 'hm-files';
+    section.innerHTML = `<span class="hm-files-label">Uploaded files</span>`;
+    files.forEach(f => {
+      const row = document.createElement('div');
+      row.className = 'hm-file-row';
+      row.innerHTML = `
+        <span>${esc(fileIcon(f.filename))}</span>
+        <span>${esc(f.filename)}</span>
+        <span class="hm-file-id">${esc(f.file_id)}</span>
+        <button class="hm-file-copy" title="Copy file ID" data-id="${esc(f.file_id)}">⎘</button>`;
+      row.querySelector('.hm-file-copy').addEventListener('click', e => {
+        const btn = e.currentTarget;
+        navigator.clipboard.writeText(btn.dataset.id).then(() => {
+          btn.textContent = '✓';
+          setTimeout(() => { btn.textContent = '⎘'; }, 2000);
+        });
+      });
+      section.appendChild(row);
+    });
+    body.appendChild(section);
+  }
+
+  // Messages
   conv.messages.forEach(msg => {
     const wrap = document.createElement('div');
     wrap.className = `hm-msg ${msg.role}`;
@@ -496,7 +471,6 @@ function openHistoryModal(conv) {
     body.appendChild(wrap);
   });
 
-  modal.classList.remove('hidden');
   body.scrollTop = 0;
 }
 
@@ -505,10 +479,6 @@ document.getElementById('hmClose').addEventListener('click', () =>
 document.getElementById('historyModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.add('hidden');
 });
-
-function _refreshHistoryAfterLog() {
-  setTimeout(loadHistory, 500);
-}
 
 // ── Logging ────────────────────────────────────────────────────────
 async function _logExchange(userMsg, assistantMsg) {
@@ -520,13 +490,12 @@ async function _logExchange(userMsg, assistantMsg) {
 
   try {
     await fetch('/api/log/messages', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ conversation_id: _convId, messages }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conversation_id: _convId, messages }),
     });
     _totalRows += messages.length;
     _updateConvUI();
-    _refreshHistoryAfterLog();
+    setTimeout(loadHistory, 500);
   } catch (_) {}
 }
 
@@ -548,8 +517,7 @@ function _deltaFromLine(line) {
 const _origFetch = window.fetch.bind(window);
 window.fetch = async function patchedFetch(resource, init = {}) {
   const url = typeof resource === 'string' ? resource
-            : resource instanceof Request  ? resource.url
-            : String(resource);
+            : resource instanceof Request  ? resource.url : String(resource);
 
   const isOpenAI = url.includes('api.openai.com') || url.includes('openai.com/v1');
   if (!isOpenAI) return _origFetch(resource, init);
@@ -564,7 +532,7 @@ window.fetch = async function patchedFetch(resource, init = {}) {
         } else if (Array.isArray(body.input)) {
           capturedUser = body.input
             .filter(m => m.role === 'user')
-            .map(m => (Array.isArray(m.content) ? m.content.map(c => c.text ?? '').join('') : m.content ?? ''))
+            .map(m => Array.isArray(m.content) ? m.content.map(c => c.text ?? '').join('') : m.content ?? '')
             .join('\n');
         }
         if (!capturedUser && Array.isArray(body.messages)) {
@@ -581,12 +549,9 @@ window.fetch = async function patchedFetch(resource, init = {}) {
 
   if (ct.includes('event-stream') && resp.body) {
     const [s1, s2] = resp.body.tee();
-
     (async () => {
-      const reader  = s2.getReader();
-      const decoder = new TextDecoder();
-      let assistantText = '';
-      let buffer        = '';
+      const reader = s2.getReader(), decoder = new TextDecoder();
+      let assistantText = '', buffer = '';
       try {
         while (true) {
           const { done, value } = await reader.read();
@@ -598,10 +563,8 @@ window.fetch = async function patchedFetch(resource, init = {}) {
         }
         if (buffer) assistantText += _deltaFromLine(buffer.trim());
       } catch (_) {}
-
       await _logExchange(capturedUser, assistantText.trim());
     })();
-
     return new Response(s1, { status: resp.status, statusText: resp.statusText, headers: resp.headers });
   }
 
@@ -609,8 +572,7 @@ window.fetch = async function patchedFetch(resource, init = {}) {
     resp.clone().json()
       .then(data => {
         const text = data?.output?.[0]?.content?.[0]?.text
-                  ?? data?.choices?.[0]?.message?.content
-                  ?? '';
+                  ?? data?.choices?.[0]?.message?.content ?? '';
         _logExchange(capturedUser, text);
       })
       .catch(() => _logExchange(capturedUser, ''));
@@ -619,23 +581,6 @@ window.fetch = async function patchedFetch(resource, init = {}) {
   return resp;
 };
 
-// ── Utilities ──────────────────────────────────────────────────────
-function esc(s) {
-  return String(s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function fileIcon(name) {
-  if (/\.pdf$/i.test(name)) return '📕';
-  if (/\.(docx?|doc)$/i.test(name)) return '📘';
-  return '📄';
-}
-function fmtSize(b) {
-  if (b < 1024)    return `${b} B`;
-  if (b < 1048576) return `${(b/1024).toFixed(1)} KB`;
-  return `${(b/1048576).toFixed(1)} MB`;
-}
-
 // ── File Upload ────────────────────────────────────────────────────
 const dropZone  = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
@@ -643,16 +588,13 @@ const fileList  = document.getElementById('fileList');
 
 dropZone.addEventListener('click', () => fileInput.click());
 dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
-fileInput.addEventListener('change', e => { processFiles([...e.target.files]); fileInput.value = ''; });
+fileInput.addEventListener('change', e => { [...e.target.files].forEach(uploadFile); fileInput.value = ''; });
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
 dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('drag-over');
-  processFiles([...e.dataTransfer.files]);
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  [...e.dataTransfer.files].forEach(uploadFile);
 });
-
-function processFiles(files) { files.forEach(uploadFile); }
 
 function addPendingCard(filename) {
   fileList.querySelector('.file-empty')?.remove();
@@ -673,6 +615,7 @@ async function uploadFile(file) {
   try {
     const fd = new FormData();
     fd.append('file', file);
+    fd.append('conversation_id', _convId);   // tie upload to current chat
     const res = await fetch('/api/upload', { method: 'POST', body: fd });
     if (!res.ok) throw new Error((await res.json().catch(()=>({}))).detail || res.statusText);
     const data = await res.json();
@@ -716,11 +659,11 @@ function showChatError(msg) {
 async function initChatKit() {
   const ready = await Promise.race([
     customElements.whenDefined('openai-chatkit'),
-    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000)),
   ]).then(() => true).catch(() => false);
 
   if (!ready) {
-    showChatError('The openai-chatkit component did not load. Check your internet connection and reload.');
+    showChatError('The chat component did not load. Check your internet connection and reload.');
     return;
   }
 
@@ -743,15 +686,17 @@ async function initChatKit() {
       },
     });
   } catch (e) {
-    showChatError('setOptions failed: ' + e.message);
+    showChatError('Could not initialize chat: ' + e.message);
     return;
   }
 
   chatkit.style.cssText = 'width:100%;height:100%;display:block;';
   chatArea.appendChild(chatkit);
 
+  // New thread = new chat session: reset conversation ID and clear file list
   chatkit.addEventListener('chatkit.thread.change', () => {
     _convId = crypto.randomUUID();
+    fileList.innerHTML = '<p class="file-empty">No files uploaded yet</p>';
   });
 
   const hide = () => chatOverlay.remove();

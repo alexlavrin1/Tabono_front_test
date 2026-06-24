@@ -11,13 +11,16 @@ const supabase = createClient(
 function parseMultipart(req) {
   return new Promise((resolve, reject) => {
     const bb = busboy({ headers: req.headers });
-    let result = null;
+    let file = null;
+    const fields = {};
+
+    bb.on('field', (name, value) => { fields[name] = value; });
 
     bb.on('file', (_field, stream, info) => {
       const chunks = [];
       stream.on('data', chunk => chunks.push(chunk));
       stream.on('end', () => {
-        result = {
+        file = {
           filename: info.filename,
           mimetype: info.mimeType || 'application/octet-stream',
           buffer: Buffer.concat(chunks),
@@ -25,7 +28,7 @@ function parseMultipart(req) {
       });
     });
 
-    bb.on('finish', () => result ? resolve(result) : reject(new Error('No file in request')));
+    bb.on('finish', () => file ? resolve({ ...file, fields }) : reject(new Error('No file in request')));
     bb.on('error', reject);
     req.pipe(bb);
   });
@@ -40,6 +43,8 @@ export default async function handler(req, res) {
   } catch (e) {
     return res.status(400).json({ detail: e.message });
   }
+
+  const conversationId = file.fields.conversation_id || null;
 
   // Save to Supabase Storage
   const storagePath = `${Date.now()}-${file.filename}`;
@@ -66,6 +71,17 @@ export default async function handler(req, res) {
     return res.status(openaiResp.status).json({ detail: await openaiResp.text() });
   }
 
-  const { id } = await openaiResp.json();
-  return res.status(200).json({ file_id: id, filename: file.filename, size: file.buffer.length });
+  const { id: fileId } = await openaiResp.json();
+
+  // Record the upload against this conversation
+  if (conversationId) {
+    await supabase.from('uploaded_files').insert({
+      conversation_id: conversationId,
+      filename: file.filename,
+      file_id: fileId,
+      size: file.buffer.length,
+    });
+  }
+
+  return res.status(200).json({ file_id: fileId, filename: file.filename, size: file.buffer.length });
 }
