@@ -1,0 +1,11 @@
+# Desktop app — not needed on Vercel
+server.py
+app.py
+requirements.txt
+build_app.sh
+run.sh
+Paper Grader.spec
+static/
+build/
+dist/
+.venv/
