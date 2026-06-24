@@ -1,0 +1,24 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# PyInstaller
+build/
+dist/
+*.spec.bak
+
+# Secrets — never commit
+.env
+
+# App data
+uploads/
+conversations.csv
+user_id
+
+# macOS
+.DS_Store
+
+# Distribution zip
+*.zip

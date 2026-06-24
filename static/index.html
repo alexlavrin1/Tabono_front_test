@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paper Grader Assistant</title>
+  <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js" async></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f4f4f0;
+      color: #1a1a1a;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #1c2b4a;
+      color: #fff;
+      padding: 13px 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      -webkit-app-region: drag; /* lets users drag the window by the header */
+    }
+    header h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.2px; }
+    header .badge {
+      margin-left: auto;
+      font-size: 11px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 99px;
+      padding: 3px 10px;
+      -webkit-app-region: no-drag;
+    }
+
+    /* ── Layout ── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 270px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid #e4e4e4;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-inner {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .section-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 2px dashed #d0d0d0;
+      border-radius: 10px;
+      padding: 20px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: #3b7dd8;
+      background: #f0f6ff;
+    }
+    .drop-zone .dz-icon { font-size: 26px; margin-bottom: 5px; }
+    .drop-zone .dz-title { font-size: 13px; font-weight: 600; color: #333; }
+    .drop-zone .dz-sub { font-size: 11px; color: #aaa; margin-top: 3px; line-height: 1.5; }
+    #fileInput { display: none; }
+
+    /* File list */
+    .file-list { display: flex; flex-direction: column; gap: 6px; }
+    .file-empty { font-size: 12px; color: #bbb; text-align: center; padding: 6px 0; }
+    .file-card {
+      background: #f8f8f7;
+      border: 1px solid #eaeaea;
+      border-radius: 7px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .file-card .fc-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .file-card .fc-body { flex: 1; min-width: 0; }
+    .file-card .fc-name {
+      font-size: 12px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #222;
+    }
+    .file-card .fc-id {
+      font-size: 9.5px; font-family: 'SF Mono','Fira Code',monospace;
+      color: #bbb; margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-card .fc-status { font-size: 10px; color: #2a9e6a; margin-top: 2px; }
+    .file-card .fc-status.error { color: #d04040; }
+    .copy-btn {
+      flex-shrink: 0; background: none; border: none;
+      cursor: pointer; color: #ccc; font-size: 13px;
+      padding: 2px 4px; border-radius: 4px; line-height: 1;
+    }
+    .copy-btn:hover { background: #ececec; color: #555; }
+
+    /* Hint */
+    .hint-box {
+      background: #fffbeb; border: 1px solid #f0e0a0;
+      border-radius: 8px; padding: 9px 11px;
+      font-size: 11px; color: #7a6020; line-height: 1.55;
+    }
+    .hint-box strong { display: block; margin-bottom: 3px; }
+
+    /* ── History panel ── */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .history-item {
+      background: #f8f8f7;
+      border: 1px solid #eaeaea;
+      border-radius: 7px;
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .history-item:hover { border-color: #3b7dd8; background: #f0f6ff; }
+    .history-item .hi-date {
+      font-size: 10px;
+      color: #bbb;
+      margin-bottom: 3px;
+    }
+    .history-item .hi-preview {
+      font-size: 12px;
+      color: #444;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .history-empty { font-size: 12px; color: #bbb; text-align: center; padding: 6px 0; }
+
+    /* ── History modal ── */
+    #historyModal {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.45);
+    }
+    #historyModal.hidden { display: none; }
+    .hm-card {
+      background: #fff;
+      border-radius: 12px;
+      width: 640px;
+      max-width: 90vw;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .hm-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .hm-header h3 { font-size: 15px; font-weight: 700; color: #1c2b4a; }
+    .hm-header .hm-date { font-size: 11px; color: #aaa; }
+    .hm-close {
+      background: none; border: none; cursor: pointer;
+      color: #aaa; font-size: 20px; line-height: 1; padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .hm-close:hover { background: #f0f0f0; color: #555; }
+    .hm-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .hm-msg {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 88%;
+    }
+    .hm-msg.user { align-self: flex-end; align-items: flex-end; }
+    .hm-msg.assistant { align-self: flex-start; }
+    .hm-msg .hm-role {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #aaa;
+    }
+    .hm-msg.user .hm-role { color: #3b7dd8; }
+    .hm-bubble {
+      padding: 9px 13px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .hm-msg.user .hm-bubble {
+      background: #1c2b4a;
+      color: #fff;
+      border-bottom-right-radius: 3px;
+    }
+    .hm-msg.assistant .hm-bubble {
+      background: #f0f0ee;
+      color: #222;
+      border-bottom-left-radius: 3px;
+    }
+
+    /* CSV download section */
+    .csv-section {
+      border-top: 1px solid #efefef;
+      padding-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .csv-stats {
+      font-size: 11px;
+      color: #aaa;
+      text-align: center;
+    }
+    .csv-stats strong { color: #555; }
+    .btn-csv {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: #1c2b4a;
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-decoration: none;
+    }
+    .btn-csv:hover { background: #2a3f6a; }
+    .btn-csv:disabled { background: #ccc; cursor: default; }
+    .conv-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #888;
+    }
+    .conv-dot {
+      width: 7px; height: 7px;
+      background: #e0e0e0;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    .conv-dot.active { background: #2a9e6a; }
+
+    /* ── Chat area ── */
+    .chat-area {
+      flex: 1; display: flex; flex-direction: column;
+      overflow: hidden; position: relative;
+    }
+    openai-chatkit { width: 100%; height: 100%; display: block; }
+
+    /* Loading overlay */
+    #chatOverlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px; background: #f4f4f0; z-index: 10;
+    }
+    .ov-spinner {
+      width: 34px; height: 34px;
+      border: 3px solid #ddd; border-top-color: #3b7dd8;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .ov-text { font-size: 13px; color: #888; }
+    .ov-error {
+      max-width: 340px; background: #fff0f0;
+      border: 1px solid #f0b0b0; border-radius: 8px;
+      padding: 14px 16px; font-size: 13px; color: #c03030;
+      text-align: center; line-height: 1.55;
+    }
+    .ov-btn {
+      margin-top: 10px; border: none; border-radius: 6px;
+      padding: 7px 18px; cursor: pointer; font-size: 13px;
+      background: #c03030; color: #fff;
+    }
+    .ov-btn:hover { background: #a02020; }
+    .ov-btn.secondary { background: #3b7dd8; }
+    .ov-btn.secondary:hover { background: #2a6bc0; }
+
+    /* ── Setup screen ── */
+    #setupScreen {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(20, 30, 55, 0.92);
+      display: flex; align-items: center; justify-content: center;
+    }
+    #setupScreen.hidden { display: none; }
+
+    .setup-card {
+      background: #fff; border-radius: 14px;
+      padding: 36px 40px; width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+    .setup-card .sc-logo { font-size: 36px; margin-bottom: 12px; text-align: center; }
+    .setup-card h2 {
+      font-size: 20px; font-weight: 700; text-align: center;
+      color: #1c2b4a; margin-bottom: 6px;
+    }
+    .setup-card .sc-sub {
+      font-size: 13px; color: #888; text-align: center;
+      margin-bottom: 28px; line-height: 1.5;
+    }
+    .setup-card label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: #444; margin-bottom: 5px; margin-top: 16px;
+    }
+    .setup-card label:first-of-type { margin-top: 0; }
+    .setup-card input {
+      width: 100%; border: 1.5px solid #ddd; border-radius: 7px;
+      padding: 9px 12px; font-size: 14px; outline: none;
+      transition: border-color 0.15s;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+    .setup-card input:focus { border-color: #3b7dd8; }
+    .setup-card .sc-hint {
+      font-size: 11px; color: #aaa; margin-top: 4px; line-height: 1.4;
+    }
+    .setup-card .sc-error {
+      font-size: 12px; color: #c03030; margin-top: 12px;
+      text-align: center; min-height: 16px;
+    }
+    .setup-card button.sc-submit {
+      margin-top: 24px; width: 100%;
+      background: #1c2b4a; color: #fff; border: none;
+      border-radius: 8px; padding: 12px; font-size: 15px;
+      font-weight: 600; cursor: pointer; transition: background 0.15s;
+    }
+    .setup-card button.sc-submit:hover { background: #2a3f6a; }
+    .setup-card button.sc-submit:disabled { background: #aaa; cursor: default; }
+  </style>
+</head>
+<body>
+
+<!-- ── First-run setup screen ── -->
+<div id="setupScreen" class="hidden">
+  <div class="setup-card">
+    <div class="sc-logo">📝</div>
+    <h2>Paper Grader Setup</h2>
+    <p class="sc-sub">Enter your OpenAI credentials once.<br>They're saved securely on this computer.</p>
+
+    <label for="apiKeyInput">OpenAI API Key</label>
+    <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off" spellcheck="false" />
+    <p class="sc-hint">Find this at platform.openai.com → API Keys</p>
+
+    <label for="workflowIdInput">Agent Builder Workflow ID</label>
+    <input type="text" id="workflowIdInput" placeholder="wf_..." autocomplete="off" spellcheck="false" />
+    <p class="sc-hint">Open your workflow in Agent Builder — the ID is in the URL or Settings panel</p>
+
+    <p class="sc-error" id="setupError"></p>
+    <button class="sc-submit" id="setupSubmit">Save &amp; Open App</button>
+  </div>
+</div>
+
+<!-- ── History modal ── -->
+<div id="historyModal" class="hidden">
+  <div class="hm-card">
+    <div class="hm-header">
+      <div>
+        <h3 id="hmTitle">Conversation</h3>
+        <span class="hm-date" id="hmDate"></span>
+      </div>
+      <button class="hm-close" id="hmClose" title="Close">✕</button>
+    </div>
+    <div class="hm-body" id="hmBody"></div>
+  </div>
+</div>
+
+<!-- ── Main UI ── -->
+<header>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff"
+       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 20h9"/>
+    <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+  </svg>
+  <h1>Paper Grader Assistant</h1>
+  <span class="badge">Agent Builder</span>
+</header>
+
+<div class="main">
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <span class="section-label">Upload Papers</span>
+
+      <div class="drop-zone" id="dropZone" role="button" tabindex="0">
+        <div class="dz-icon">📄</div>
+        <div class="dz-title">Drop files here</div>
+        <div class="dz-sub">PDF · Word · Text<br>or click to browse</div>
+        <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt" multiple />
+      </div>
+
+      <span class="section-label">Saved Files</span>
+      <div class="file-list" id="fileList">
+        <p class="file-empty">No files uploaded yet</p>
+      </div>
+
+      <div class="hint-box">
+        <strong>💡 Tip</strong>
+        Upload a paper — it's saved locally and gets an OpenAI file ID.
+        Attach it in the chat or paste its ID when messaging the agent.
+      </div>
+
+      <div class="csv-section">
+        <span class="section-label">Past Conversations</span>
+        <div class="history-list" id="historyList">
+          <p class="history-empty">No conversations yet</p>
+        </div>
+      </div>
+
+      <div class="csv-section">
+        <span class="section-label">Conversation Log</span>
+        <div class="conv-indicator">
+          <span class="conv-dot" id="convDot"></span>
+          <span id="convLabel">No messages logged yet</span>
+        </div>
+        <p class="csv-stats" id="csvStats"></p>
+        <a class="btn-csv" id="btnCsv" href="/api/conversations.csv" download="conversations.csv">
+          ⬇ Download CSV
+        </a>
+      </div>
+
+    </div>
+  </aside>
+
+  <div class="chat-area" id="chatArea">
+    <div id="chatOverlay">
+      <div class="ov-spinner"></div>
+      <span class="ov-text">Connecting to agent…</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CONVERSATION LOGGER
+// Intercepts all fetch() calls made by the openai-chatkit component
+// to OpenAI's API, tees streaming SSE responses, extracts the user
+// prompt and the assistant's full reply, and POSTs each exchange to
+// /api/log/messages so the backend appends it to conversations.csv.
+// ══════════════════════════════════════════════════════════════════
+
+let _convId   = crypto.randomUUID();   // one ID per chat session
+let _totalRows = 0;
+
+function _nowISO() { return new Date().toISOString(); }
+
+// Update the sidebar indicator
+function _updateConvUI() {
+  const dot   = document.getElementById('convDot');
+  const label = document.getElementById('convLabel');
+  const stats = document.getElementById('csvStats');
+  if (!dot) return;
+  if (_totalRows > 0) {
+    dot.classList.add('active');
+    label.textContent = 'Logging active';
+    stats.textContent = `${_totalRows} message${_totalRows !== 1 ? 's' : ''} saved`;
+  }
+}
+
+// ── History panel ─────────────────────────────────────────────────
+function _fmtDate(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString(undefined, {
+      month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+  } catch { return iso.slice(0, 16).replace('T', ' '); }
+}
+
+function _previewText(conv) {
+  const first = conv.messages.find(m => m.role === 'user');
+  return first ? first.content.slice(0, 60) : '(empty)';
+}
+
+async function loadHistory() {
+  const list = document.getElementById('historyList');
+  if (!list) return;
+  try {
+    const convs = await fetch('/api/conversations').then(r => r.json());
+    list.innerHTML = '';
+    if (!convs.length) {
+      list.innerHTML = '<div class="history-empty">No past conversations yet.</div>';
+      return;
+    }
+    convs.forEach(conv => {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.innerHTML = `
+        <div class="hi-date">${esc(_fmtDate(conv.started_at))}</div>
+        <div class="hi-preview">${esc(_previewText(conv))}</div>`;
+      item.addEventListener('click', () => openHistoryModal(conv));
+      list.appendChild(item);
+    });
+  } catch { /* non-critical */ }
+}
+
+function openHistoryModal(conv) {
+  const modal  = document.getElementById('historyModal');
+  const title  = document.getElementById('hmTitle');
+  const date   = document.getElementById('hmDate');
+  const body   = document.getElementById('hmBody');
+
+  const msgCount = conv.messages.length;
+  title.textContent = `${msgCount} message${msgCount !== 1 ? 's' : ''}`;
+  date.textContent  = _fmtDate(conv.started_at);
+
+  body.innerHTML = '';
+  conv.messages.forEach(msg => {
+    const wrap = document.createElement('div');
+    wrap.className = `hm-msg ${msg.role}`;
+    wrap.innerHTML = `
+      <span class="hm-role">${esc(msg.role)}</span>
+      <div class="hm-bubble">${esc(msg.content)}</div>`;
+    body.appendChild(wrap);
+  });
+
+  modal.classList.remove('hidden');
+  body.scrollTop = 0;
+}
+
+// Close modal on button or backdrop click
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('hmClose')?.addEventListener('click', () =>
+    document.getElementById('historyModal').classList.add('hidden'));
+  document.getElementById('historyModal')?.addEventListener('click', e => {
+    if (e.target === e.currentTarget)
+      e.currentTarget.classList.add('hidden');
+  });
+});
+
+// Refresh history list whenever a new exchange is logged
+function _refreshHistoryAfterLog() {
+  setTimeout(loadHistory, 500); // small delay so backend has written the row
+}
+
+// Send one exchange (user + assistant) to the backend
+async function _logExchange(userMsg, assistantMsg) {
+  const messages = [];
+  const ts = _nowISO();
+  if (userMsg)      messages.push({ role: 'user',      content: userMsg,      timestamp: ts });
+  if (assistantMsg) messages.push({ role: 'assistant', content: assistantMsg, timestamp: ts });
+  if (!messages.length) return;
+
+  try {
+    await fetch('/api/log/messages', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ conversation_id: _convId, messages }),
+    });
+    _totalRows += messages.length;
+    _updateConvUI();
+    _refreshHistoryAfterLog();
+  } catch (_) { /* non-critical — never break the UI */ }
+}
+
+// Parse a text delta out of one SSE data line (handles several OpenAI formats)
+function _deltaFromLine(line) {
+  if (!line.startsWith('data: ') || line === 'data: [DONE]') return '';
+  try {
+    const d = JSON.parse(line.slice(6));
+    // Responses API streaming: output_text.delta
+    if (d.type === 'response.output_text.delta') return d.delta ?? '';
+    // Responses API: content_block_delta
+    if (d.type === 'content_block_delta') return d.delta?.text ?? '';
+    // Chat Completions streaming
+    if (d.choices?.[0]?.delta?.content) return d.choices[0].delta.content;
+    // ChatKit own format (best-effort)
+    if (typeof d.delta === 'string') return d.delta;
+    if (typeof d.text  === 'string') return d.text;
+  } catch (_) {}
+  return '';
+}
+
+// Patch window.fetch ONCE — must run before chatkit.js makes any calls
+const _origFetch = window.fetch.bind(window);
+window.fetch = async function patchedFetch(resource, init = {}) {
+  const url = typeof resource === 'string' ? resource
+            : resource instanceof Request  ? resource.url
+            : String(resource);
+
+  // Only intercept outbound calls to OpenAI endpoints
+  const isOpenAI = url.includes('api.openai.com') || url.includes('openai.com/v1');
+  if (!isOpenAI) return _origFetch(resource, init);
+
+  // ── Capture user message from the request body ──────────────────
+  let capturedUser = '';
+  if (init.body) {
+    try {
+      const body = typeof init.body === 'string' ? JSON.parse(init.body) : null;
+      if (body) {
+        // Responses API: body.input (string or array)
+        if (typeof body.input === 'string') {
+          capturedUser = body.input;
+        } else if (Array.isArray(body.input)) {
+          capturedUser = body.input
+            .filter(m => m.role === 'user')
+            .map(m => (Array.isArray(m.content) ? m.content.map(c => c.text ?? '').join('') : m.content ?? ''))
+            .join('\n');
+        }
+        // Chat Completions: body.messages[]
+        if (!capturedUser && Array.isArray(body.messages)) {
+          const last = [...body.messages].reverse().find(m => m.role === 'user');
+          if (last) capturedUser = typeof last.content === 'string' ? last.content : JSON.stringify(last.content);
+        }
+        // ChatKit generic fallback
+        if (!capturedUser && typeof body.message === 'string') capturedUser = body.message;
+      }
+    } catch (_) {}
+  }
+
+  // ── Make the actual request ─────────────────────────────────────
+  const resp = await _origFetch(resource, init);
+  const ct   = resp.headers.get('content-type') ?? '';
+
+  // ── For streaming SSE responses, tee the body ──────────────────
+  if (ct.includes('event-stream') && resp.body) {
+    const [s1, s2] = resp.body.tee();
+
+    // Consume s2 in the background to collect the assistant's full reply
+    (async () => {
+      const reader  = s2.getReader();
+      const decoder = new TextDecoder();
+      let assistantText = '';
+      let buffer        = '';
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';          // keep incomplete last line
+          for (const line of lines) {
+            assistantText += _deltaFromLine(line.trim());
+          }
+        }
+        // Flush any remaining buffer
+        if (buffer) assistantText += _deltaFromLine(buffer.trim());
+      } catch (_) {}
+
+      await _logExchange(capturedUser, assistantText.trim());
+    })();
+
+    // Return s1 untouched so the component works normally
+    return new Response(s1, { status: resp.status, statusText: resp.statusText, headers: resp.headers });
+  }
+
+  // ── Non-streaming responses: log if we have a user message ─────
+  if (capturedUser) {
+    resp.clone().json()
+      .then(data => {
+        const text = data?.output?.[0]?.content?.[0]?.text
+                  ?? data?.choices?.[0]?.message?.content
+                  ?? '';
+        _logExchange(capturedUser, text);
+      })
+      .catch(() => _logExchange(capturedUser, ''));
+  }
+
+  return resp;
+};
+
+// ── Utilities ─────────────────────────────────────────────────────
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fileIcon(name) {
+  if (/\.pdf$/i.test(name)) return '📕';
+  if (/\.(docx?|doc)$/i.test(name)) return '📘';
+  return '📄';
+}
+function fmtSize(b) {
+  if (b < 1024)        return `${b} B`;
+  if (b < 1048576)     return `${(b/1024).toFixed(1)} KB`;
+  return `${(b/1048576).toFixed(1)} MB`;
+}
+
+// ── Setup screen ──────────────────────────────────────────────────
+const setupScreen  = document.getElementById('setupScreen');
+const setupError   = document.getElementById('setupError');
+const setupSubmit  = document.getElementById('setupSubmit');
+const apiKeyInput  = document.getElementById('apiKeyInput');
+const wfIdInput    = document.getElementById('workflowIdInput');
+
+function showSetup() {
+  setupScreen.classList.remove('hidden');
+  apiKeyInput.focus();
+}
+function hideSetup() {
+  setupScreen.classList.add('hidden');
+}
+
+setupSubmit.addEventListener('click', async () => {
+  const apiKey     = apiKeyInput.value.trim();
+  const workflowId = wfIdInput.value.trim();
+
+  if (!apiKey)     { setupError.textContent = 'API Key is required.'; return; }
+  if (!workflowId) { setupError.textContent = 'Workflow ID is required.'; return; }
+
+  setupSubmit.disabled = true;
+  setupError.textContent = '';
+
+  try {
+    const res = await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: apiKey, workflow_id: workflowId }),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.detail || res.statusText);
+    }
+    hideSetup();
+    initChatKit();
+  } catch (err) {
+    setupError.textContent = String(err.message);
+  } finally {
+    setupSubmit.disabled = false;
+  }
+});
+
+// Allow Enter key to submit
+[apiKeyInput, wfIdInput].forEach(el =>
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') setupSubmit.click(); })
+);
+
+// ── File Upload ───────────────────────────────────────────────────
+const dropZone  = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const fileList  = document.getElementById('fileList');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
+fileInput.addEventListener('change', e => { processFiles([...e.target.files]); fileInput.value = ''; });
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  processFiles([...e.dataTransfer.files]);
+});
+
+function processFiles(files) { files.forEach(uploadFile); }
+
+function addPendingCard(filename) {
+  fileList.querySelector('.file-empty')?.remove();
+  const card = document.createElement('div');
+  card.className = 'file-card';
+  card.innerHTML = `
+    <span class="fc-icon">${fileIcon(filename)}</span>
+    <div class="fc-body">
+      <div class="fc-name">${esc(filename)}</div>
+      <div class="fc-id">Uploading…</div>
+    </div>`;
+  fileList.prepend(card);
+  return card;
+}
+
+async function uploadFile(file) {
+  const card = addPendingCard(file.name);
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+    if (!res.ok) throw new Error((await res.json().catch(()=>({}))).detail || res.statusText);
+    const data = await res.json();
+    card.innerHTML = `
+      <span class="fc-icon">${fileIcon(file.name)}</span>
+      <div class="fc-body">
+        <div class="fc-name">${esc(data.filename)}</div>
+        <div class="fc-id">${esc(data.file_id)}</div>
+        <div class="fc-status">✓ Saved · ${fmtSize(data.size)}</div>
+      </div>
+      <button class="copy-btn" title="Copy file ID" data-id="${esc(data.file_id)}">⎘</button>`;
+    card.querySelector('.copy-btn').addEventListener('click', e => {
+      const btn = e.currentTarget;
+      navigator.clipboard.writeText(btn.dataset.id).then(() => {
+        btn.textContent = '✓';
+        setTimeout(() => { btn.textContent = '⎘'; }, 2000);
+      });
+    });
+  } catch (err) {
+    const body = card.querySelector('.fc-body');
+    body.querySelector('.fc-id').textContent = '— upload failed';
+    const s = document.createElement('div');
+    s.className = 'fc-status error';
+    s.textContent = String(err.message).slice(0, 80);
+    body.appendChild(s);
+  }
+}
+
+// Populate sidebar with files saved in previous sessions
+fetch('/api/uploads').then(r => r.json()).then(files => {
+  if (!files.length) return;
+  fileList.innerHTML = '';
+  files.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'file-card';
+    card.innerHTML = `
+      <span class="fc-icon">${fileIcon(f.filename)}</span>
+      <div class="fc-body">
+        <div class="fc-name">${esc(f.filename)}</div>
+        <div class="fc-status">Saved locally · ${fmtSize(f.size)}</div>
+      </div>`;
+    fileList.appendChild(card);
+  });
+}).catch(() => {});
+
+// ── ChatKit ───────────────────────────────────────────────────────
+const chatArea    = document.getElementById('chatArea');
+const chatOverlay = document.getElementById('chatOverlay');
+
+function showChatError(msg, showSettings = false) {
+  chatOverlay.innerHTML = `
+    <div class="ov-error">
+      <strong>Could not connect to agent</strong><br>${esc(msg)}
+      <br>
+      ${showSettings
+        ? `<button class="ov-btn secondary" onclick="showSetup();document.getElementById('chatOverlay').innerHTML='<div class=\\'ov-spinner\\'></div><span class=\\'ov-text\\'>Connecting…</span>'">Open Settings</button>`
+        : `<button class="ov-btn" onclick="location.reload()">Retry</button>`}
+    </div>`;
+}
+
+async function initChatKit() {
+  // Wait for the CDN script to register the custom element (up to 8 s)
+  const ready = await Promise.race([
+    customElements.whenDefined('openai-chatkit'),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
+  ]).then(() => true).catch(() => false);
+
+  if (!ready) {
+    showChatError(
+      'The openai-chatkit component did not load. ' +
+      'Check your internet connection and reload.'
+    );
+    return;
+  }
+
+  const chatkit = document.createElement('openai-chatkit');
+  try {
+    chatkit.setOptions({
+      api: {
+        async getClientSecret() {
+          const res = await fetch('/api/session', { method: 'POST' });
+          if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            throw new Error(d.detail || res.statusText);
+          }
+          return (await res.json()).client_secret;
+        },
+      },
+    });
+  } catch (e) {
+    showChatError('setOptions failed: ' + e.message);
+    return;
+  }
+
+  chatkit.style.cssText = 'width:100%;height:100%;display:block;';
+  chatArea.appendChild(chatkit);
+
+  // Each new thread = new conversation_id in the CSV
+  chatkit.addEventListener('chatkit.thread.change', () => {
+    _convId = crypto.randomUUID();
+  });
+
+  // Remove the spinner once the chat is live
+  const hide = () => chatOverlay.remove();
+  chatkit.addEventListener('chatkit.response.start', hide, { once: true });
+  chatkit.addEventListener('chatkit.thread.change',  hide, { once: true });
+  setTimeout(hide, 4000); // fallback
+}
+
+// ── Boot sequence ─────────────────────────────────────────────────
+// Load existing CSV row count so the badge is accurate from the start.
+fetch('/api/conversations/count')
+  .then(r => r.json())
+  .then(d => { _totalRows = d.rows ?? 0; _updateConvUI(); })
+  .catch(() => {});
+
+// Populate history sidebar immediately.
+loadHistory();
+
+// Check whether credentials exist; show setup screen if not.
+async function boot() {
+  try {
+    const res  = await fetch('/api/config/status');
+    const data = await res.json();
+    if (data.configured) {
+      initChatKit();
+    } else {
+      // Setup screen in front; hide the chat overlay behind it
+      chatOverlay.innerHTML = '';
+      showSetup();
+    }
+  } catch {
+    showChatError('Could not reach the local server. Try restarting the app.');
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => setTimeout(boot, 50));
+</script>
+</body>
+</html>
