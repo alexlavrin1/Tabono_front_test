@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Paper Grader Assistant</title>
+  <meta name="openai-domain-verification" content="domain_pk_6a3baeb3468881939c9a51c9385565da07afe7b189a60a2b" />
   <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js" async></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -681,7 +682,9 @@ async function initChatKit() {
             const d = await res.json().catch(() => ({}));
             throw new Error(d.detail || res.statusText);
           }
-          return (await res.json()).client_secret;
+          const data = await res.json();
+          // chatkit expects the value string, not the full {value, expires_at} object
+          return data.client_secret?.value ?? data.client_secret;
         },
       },
     });
